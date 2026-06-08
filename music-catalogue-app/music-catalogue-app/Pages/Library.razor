@@ -1,0 +1,108 @@
+﻿@page "/library"
+@using music_catalogue_app.Models
+@using music_catalogue_app.Services
+@inject MusicCatalog MusicCatalog
+
+<h1>Music Library</h1>
+
+<input placeholder="Title" @bind="title" />
+<br />
+<br />
+
+<input placeholder="Artist" @bind="artist" />
+<br />
+<br />
+
+<button @onclick="AddSong">Add Song</button>
+
+<hr />
+
+<ul>
+    @foreach (var song in songs)
+    {
+        <li>
+            @song.Title - @song.Artist
+
+            <button @onclick="() => StartEdit(song)">Edit</button>
+            <button @onclick="() => DeleteSong(song.Id)">Delete</button>
+        </li>
+    }
+</ul>
+
+@if (editingSong is not null)
+{
+    <h3>Edit Song</h3>
+
+    <input placeholder="Title" @bind="editingSong.Title" />
+    <br />
+    <br />
+
+    <input placeholder="Artist" @bind="editingSong.Artist" />
+    <br />
+    <br />
+
+    <button @onclick="UpdateSong">Save Changes</button>
+}
+
+@code {
+    private string title = "";
+    private string artist = "";
+
+    private List<Song> songs = new();
+
+    private Song? editingSong;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSongs();
+    }
+
+    private async Task LoadSongs()
+    {
+        songs = await MusicCatalog.GetAllAsync();
+    }
+
+    private async Task AddSong()
+    {
+        var song = new Song
+        {
+            Id = DateTime.Now.Millisecond + DateTime.Now.Second * 1000,
+            Title = title,
+            Artist = artist
+        };
+
+        await MusicCatalog.AddAsync(song);
+
+        title = "";
+        artist = "";
+
+        await LoadSongs();
+    }
+
+    private void StartEdit(Song song)
+    {
+        editingSong = new Song
+        {
+            Id = song.Id,
+            Title = song.Title,
+            Artist = song.Artist
+        };
+    }
+
+    private async Task UpdateSong()
+    {
+        if (editingSong is not null)
+        {
+            await MusicCatalog.UpdateAsync(editingSong);
+            editingSong = null;
+            await LoadSongs();
+        }
+    }
+
+    private async Task DeleteSong(int id)
+    {
+        await MusicCatalog.DeleteAsync(id);
+        await LoadSongs();
+    }
+}
+
