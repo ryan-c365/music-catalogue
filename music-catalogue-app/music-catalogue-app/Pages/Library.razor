@@ -1,19 +1,32 @@
 ﻿@page "/library"
 @using music_catalogue_app.Models
 @using music_catalogue_app.Services
+@using System.ComponentModel.DataAnnotations
 @inject MusicCatalog MusicCatalog
 
 <h1>Music Library</h1>
 
-<input placeholder="Title" @bind="title" />
-<br />
-<br />
+<EditForm Model="songDTO" OnValidSubmit="AddSong">
 
-<input placeholder="Artist" @bind="artist" />
-<br />
-<br />
+    <DataAnnotationsValidator />
 
-<button @onclick="AddSong">Add Song</button>
+    <ValidationSummary />
+
+    <InputText placeholder="Title" @bind-Value="songDTO.title" />
+
+    <br />
+    <br />
+
+    <InputText placeholder="Artist" @bind-Value="songDTO.artist" />
+
+    <br />
+    <br />
+
+    <button type="submit">
+        Add Song
+    </button>
+
+</EditForm>
 
 <hr />
 
@@ -45,8 +58,7 @@
 }
 
 @code {
-    private string title = "";
-    private string artist = "";
+    private SongDTO songDTO = new();
 
     private List<Song> songs = new();
 
@@ -67,14 +79,14 @@
         var song = new Song
         {
             Id = DateTime.Now.Millisecond + DateTime.Now.Second * 1000,
-            Title = title,
-            Artist = artist
+            Title = songDTO.title,
+            Artist = songDTO.artist
         };
 
         await MusicCatalog.AddAsync(song);
 
-        title = "";
-        artist = "";
+        songDTO.title = "";
+        songDTO.artist = "";
 
         await LoadSongs();
     }
@@ -104,5 +116,6 @@
         await MusicCatalog.DeleteAsync(id);
         await LoadSongs();
     }
+
 }
 
